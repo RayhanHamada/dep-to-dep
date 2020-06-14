@@ -66,7 +66,14 @@ async function convert(filePath, to) {
     /**
      * prettify stringified json first
      */
-    const formatted = prettier_1.format(JSON.stringify(parsedFile));
+    let formatted;
+    try {
+        formatted = prettier_1.format(JSON.stringify(parsedFile), { parser: 'json' });
+    }
+    catch (e) {
+        console.error(`format error`);
+        return;
+    }
     /**
      * write back to package.json
      */
