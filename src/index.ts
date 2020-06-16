@@ -31,7 +31,7 @@ export async function convert(filePath: string, to: ConvType): Promise<void> {
      * check if devDependencies is exists
      */
     if (!Object.keys(parsedFile).includes('devDependencies')) {
-      console.error(`dep-to-dep: devDependecies not exists !`);
+      console.error(`dep-to-dep: devDependencies not exists !`);
       return;
     }
 
@@ -48,7 +48,7 @@ export async function convert(filePath: string, to: ConvType): Promise<void> {
      * check if dependecies is exists
      */
     if (!Object.keys(parsedFile).includes('dependencies')) {
-      console.error(`dep-to-dep: dependecies not exists !`);
+      console.error(`dep-to-dep: dependencies not exists !`);
       return;
     }
 
