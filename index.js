@@ -37,6 +37,7 @@ async function convert(filePath, to) {
         }
         parsedFile = {
             ...parsedFile,
+            devDependencies: {},
             dependencies: {
                 ...parsedFile.dependencies,
                 ...parsedFile.devDependencies,
@@ -57,6 +58,7 @@ async function convert(filePath, to) {
                 ...parsedFile.devDependencies,
                 ...parsedFile.dependencies,
             },
+            dependencies: {},
         };
     }
     else {

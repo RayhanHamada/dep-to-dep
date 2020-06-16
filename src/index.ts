@@ -37,6 +37,7 @@ export async function convert(filePath: string, to: ConvType): Promise<void> {
 
     parsedFile = {
       ...parsedFile,
+      devDependencies: {},
       dependencies: {
         ...parsedFile.dependencies,
         ...parsedFile.devDependencies,
@@ -57,6 +58,7 @@ export async function convert(filePath: string, to: ConvType): Promise<void> {
         ...parsedFile.devDependencies,
         ...parsedFile.dependencies,
       },
+      dependencies: {},
     };
   } else {
     console.error(`dep-to-dep: invalid ConvTypes !`);
