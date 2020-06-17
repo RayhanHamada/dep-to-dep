@@ -3,14 +3,14 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.convert = void 0;
+exports.filterDep = exports.filterKeys = exports.convert = void 0;
 const fs_1 = __importDefault(require("fs"));
 const path_1 = __importDefault(require("path"));
 const prettier_1 = require("prettier");
 /**
  * convert dependencies to devDependencies and vice versa in package.json
  */
-async function convert(filePath, to) {
+async function convert(filePath, to, excludes) {
     const resolvedPath = path_1.default.resolve(process.cwd(), filePath);
     const file = await fs_1.default.promises
         .readFile(resolvedPath, { encoding: 'utf-8' })
@@ -35,12 +35,19 @@ async function convert(filePath, to) {
             console.error(`dep-to-dep: devDependencies not exists !`);
             return;
         }
+        /**
+         * get keys from devDependecies, and if exclude is not undefined
+         * then filter the keys
+         */
+        const keys = Object.keys(parsedFile.devDependencies);
+        const filteredKeys = excludes === undefined ? keys : exports.filterKeys(keys, excludes);
+        const filteredPair = exports.filterDep(filteredKeys, parsedFile.devDependencies);
         parsedFile = {
             ...parsedFile,
             devDependencies: {},
             dependencies: {
                 ...parsedFile.dependencies,
-                ...parsedFile.devDependencies,
+                ...filteredPair,
             },
         };
     }
@@ -52,11 +59,18 @@ async function convert(filePath, to) {
             console.error(`dep-to-dep: dependencies not exists !`);
             return;
         }
+        /**
+         * get keys from dependencies, and if exclude is not undefined
+         * then filter the keys
+         */
+        const keys = Object.keys(parsedFile.dependencies);
+        const filteredKeys = excludes === undefined ? keys : exports.filterKeys(keys, excludes);
+        const filteredPair = exports.filterDep(filteredKeys, parsedFile.dependencies);
         parsedFile = {
             ...parsedFile,
             devDependencies: {
                 ...parsedFile.devDependencies,
-                ...parsedFile.dependencies,
+                ...filteredPair,
             },
             dependencies: {},
         };
@@ -85,3 +99,11 @@ async function convert(filePath, to) {
     });
 }
 exports.convert = convert;
+/**
+ * for filtering keys
+ */
+exports.filterKeys = (keys, patterns) => keys.filter(key => !patterns.reduce((prev, curr) => prev || curr.test(key), false));
+/**
+ * for make object with filtered keys
+ */
+exports.filterDep = (keys, depObject) => keys.reduce((prev, curr) => ({ ...prev, [curr]: depObject[curr] }), {});

@@ -4,10 +4,16 @@ import { format } from 'prettier';
 
 type ConvType = 'toDev' | 'toDep';
 
+type DepObject = Record<string, string>;
+
 /**
  * convert dependencies to devDependencies and vice versa in package.json
  */
-export async function convert(filePath: string, to: ConvType): Promise<void> {
+export async function convert(
+  filePath: string,
+  to: ConvType,
+  excludes?: RegExp[]
+): Promise<void> {
   const resolvedPath = path.resolve(process.cwd(), filePath);
 
   const file = await fs.promises
@@ -35,12 +41,23 @@ export async function convert(filePath: string, to: ConvType): Promise<void> {
       return;
     }
 
+    /**
+     * get keys from devDependecies, and if exclude is not undefined
+     * then filter the keys
+     */
+    const keys = Object.keys(parsedFile.devDependencies);
+
+    const filteredKeys =
+      excludes === undefined ? keys : filterKeys(keys, excludes);
+
+    const filteredPair = filterDep(filteredKeys, parsedFile.devDependencies);
+
     parsedFile = {
       ...parsedFile,
       devDependencies: {},
       dependencies: {
         ...parsedFile.dependencies,
-        ...parsedFile.devDependencies,
+        ...filteredPair,
       },
     };
   } else if (to === 'toDev') {
@@ -52,11 +69,22 @@ export async function convert(filePath: string, to: ConvType): Promise<void> {
       return;
     }
 
+    /**
+     * get keys from dependencies, and if exclude is not undefined
+     * then filter the keys
+     */
+    const keys = Object.keys(parsedFile.dependencies);
+
+    const filteredKeys =
+      excludes === undefined ? keys : filterKeys(keys, excludes);
+
+    const filteredPair = filterDep(filteredKeys, parsedFile.dependencies);
+
     parsedFile = {
       ...parsedFile,
       devDependencies: {
         ...parsedFile.devDependencies,
-        ...parsedFile.dependencies,
+        ...filteredPair,
       },
       dependencies: {},
     };
@@ -84,3 +112,21 @@ export async function convert(filePath: string, to: ConvType): Promise<void> {
     return;
   });
 }
+
+/**
+ * for filtering keys
+ */
+export const filterKeys = (keys: string[], patterns: RegExp[]): string[] =>
+  keys.filter(
+    key =>
+      !patterns.reduce<boolean>((prev, curr) => prev || curr.test(key), false)
+  );
+
+/**
+ * for make object with filtered keys
+ */
+export const filterDep = (keys: string[], depObject: DepObject): DepObject =>
+  keys.reduce<DepObject>(
+    (prev, curr) => ({ ...prev, [curr]: depObject[curr] }),
+    {}
+  );
